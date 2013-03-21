@@ -40,7 +40,7 @@ module Mailchimp
     end
 
     def get_content_for(message, format)
-      message.send(:"body_#{format.to_s}").to_s
+      message.send(:"#{format.to_s}_part").to_s
     end
 
   end
