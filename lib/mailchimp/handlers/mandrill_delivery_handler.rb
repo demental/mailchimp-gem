@@ -40,9 +40,16 @@ module Mailchimp
     end
 
     def get_content_for(message, format)
-      message.send(:"#{format.to_s}_part").to_s
+      if(message.multipart?)
+        message.send(:"#{format.to_s}_part").body rescue nil
+      else
+        message.body unless is_format?(message, format)
+      end
     end
 
+    def is_format? message, format
+      message.text? && format.to_sym != :text
+    end
   end
 end
 
