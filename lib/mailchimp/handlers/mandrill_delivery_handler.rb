@@ -7,7 +7,6 @@ module Mailchimp
     end
 
     def deliver!(message)
-      puts get_to_for(message)
       message_payload = {
         :track_opens => settings[:track_opens],
         :track_clicks => settings[:track_clicks],
@@ -21,7 +20,7 @@ module Mailchimp
 
       [:html, :text].each do |format|
         content = get_content_for(message, format)
-        message_payload[:message][format] = content if content
+        message_payload[:message][format] = content unless content.blank?
       end
 
       message_payload[:tags] = settings[:tags] if settings[:tags]
@@ -41,14 +40,7 @@ module Mailchimp
     end
 
     def get_content_for(message, format)
-      mime_types = {
-        :html => "text/html",
-        :text => "text/plain"
-      }
-
-      content = message.send(:"#{format.to_s}_part")
-
-      content.body.to_s unless content.blank?
+      message.send(:"body_#{format.to_s}").to_s
     end
 
   end

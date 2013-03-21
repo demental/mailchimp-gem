@@ -27,6 +27,12 @@ class MandrillDeliveryHandlerTest < Test::Unit::TestCase
       end
     end
   end
+
+  context "get_content_for" do
+    should "return the message part" do
+
+    end
+  end
   private
 
   def mock_mail params
