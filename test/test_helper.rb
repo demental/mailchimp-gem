@@ -26,7 +26,7 @@ def mock_mail_message(options = {})
   from = [ options.fetch(:from) { 'foo@bar.com' } ]
   to = [ options.fetch(:to) {'foo@bar.com'} ]
   body = options.fetch(:body) { 'foo@bar.com has moved use awesome@awesomesauce.com now' }
-  
+
   message = mock('Mail::Message')
   message.stubs(:subject).returns(subject)
   message.stubs(:date).returns(Date.today)
@@ -36,8 +36,8 @@ def mock_mail_message(options = {})
   message.stubs(:header).returns('')
   message.stubs(:multipart?).returns(false)
   message.stubs(:mime_type).returns('text/html')
-  message.stubs(:html_part).returns(nil)
-  message.stubs(:text_part).returns(nil)
-  
+  message.stubs(:body_html).returns(nil)
+  message.stubs(:body_text).returns(nil)
+
   message
 end
