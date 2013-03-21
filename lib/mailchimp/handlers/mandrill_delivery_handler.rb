@@ -48,7 +48,7 @@ module Mailchimp
     end
 
     def is_format? message, format
-      message.text? && format.to_sym != :text
+      (message.text?) == (format.to_sym == :text)
     end
   end
 end
