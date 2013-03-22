@@ -7,7 +7,6 @@ module Mailchimp
     end
 
     def deliver!(message)
-      api_key =
       Mailchimp::Mandrill.new(api_key_for message).messages_send message_payload(message)
     end
 

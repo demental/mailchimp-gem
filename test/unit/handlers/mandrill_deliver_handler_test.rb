@@ -26,11 +26,12 @@ class MandrillDeliveryHandlerTest < Test::Unit::TestCase
     end
   end
 
-  context "api_key_for" do
+  context '#api_key_for' do
     should "Use settings by defaults" do
       subject.stubs(:settings).returns :api_key => 12345
       assert_equal 12345, subject.__send__(:api_key_for, mock_mail_message)
     end
+
     should "User header api-key if provided" do
       mail = mock_mail_message
       mail.stubs(:header => {'api-key' => 123} )
@@ -39,7 +40,7 @@ class MandrillDeliveryHandlerTest < Test::Unit::TestCase
   end
 
 
-  context "get_to_for" do
+  context '#get_to_for' do
     should "Return an array of hashes" do
       test_emails.each do |h|
         assert_equal h[:expected], subject.__send__(:get_to_for, mock_mail(h[:params]))
@@ -47,7 +48,7 @@ class MandrillDeliveryHandlerTest < Test::Unit::TestCase
     end
   end
 
-  context "get_content_for" do
+  context '#get_content_for' do
 
     context "when multipart email" do
 
@@ -78,7 +79,7 @@ class MandrillDeliveryHandlerTest < Test::Unit::TestCase
   end
 
 
-  context "message_payload" do
+  context '#message_payload' do
     should "return a hash" do
       assert subject.__send__(:message_payload, mock_mail_message).kind_of? Hash
     end
