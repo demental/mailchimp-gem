@@ -36,9 +36,11 @@ def mock_mail_message(options = {})
   message.stubs(:header).returns('')
   message.stubs(:multipart?).returns(false)
   message.stubs(:mime_type).returns('text/html')
-  message.stubs(:body_html).returns(nil)
-  message.stubs(:body_text).returns(nil)
   message.stubs(:text?).returns(false)
+  message.stubs(:html_part).returns(nil)
+  message.stubs(:text_part).returns(nil)
+  message.stubs(:reply_to).returns('replyto@example.com')
+  message.stubs(:bcc).returns(nil)
 
   message
 end

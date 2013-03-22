@@ -5,7 +5,7 @@ require File.join('./lib/mailchimp','handlers', 'mandrill_delivery_handler')
 class MandrillDeliveryHandlerTest < Test::Unit::TestCase
 
   def subject
-    @subject ||= Mailchimp::MandrillDeliveryHandler.new
+    @subject ||= Mailchimp::MandrillDeliveryHandler.new :from_name => "Foo Bar"
   end
 
   context "when delivering a Mail::Message to the Mandrill API" do
@@ -24,6 +24,31 @@ class MandrillDeliveryHandlerTest < Test::Unit::TestCase
       response = subject.deliver!(message)
       assert_equal @fake_mandrill_api_response, response
     end
+
+
+  end
+
+  context "for the mandrill api payload" do
+    should "build a valid Mandrill API payload" do
+      message = mock_mail_message
+      message_payload = subject.__send__(:get_message_payload, message)
+
+      assert_equal true, message_payload[:track_opens]
+      assert_equal true, message_payload[:track_clicks]
+      assert_equal 'Subject', message_payload[:message][:subject]
+      assert_equal 'foo@bar.com', message_payload[:message][:from_email]
+      assert_equal 'Foo Bar', message_payload[:message][:from_name]
+      assert_equal 'foo@bar.com has moved use awesome@awesomesauce.com now', message_payload[:message][:html]
+      assert_equal [{email: 'foo@bar.com', name: 'foo@bar.com'}], message_payload[:message][:to]
+      assert_equal({'Reply-To' => 'replyto@example.com'}, message_payload[:message][:headers])
+    end
+
+    should "handle bcc correctly" do
+      message = mock_mail_message
+      message.stubs(:bcc).returns(["bar@bar.com"])
+      message_payload = subject.__send__(:get_message_payload, message)
+      assert_equal 'bar@bar.com', message_payload[:message][:bcc_address]
+    end
   end
 
   context '#api_key_for' do
@@ -41,11 +66,14 @@ class MandrillDeliveryHandlerTest < Test::Unit::TestCase
 
 
   context '#get_to_for' do
+
     should "Return an array of hashes" do
       test_emails.each do |h|
         assert_equal h[:expected], subject.__send__(:get_to_for, mock_mail(h[:params]))
       end
+
     end
+
   end
 
   context '#get_content_for' do
@@ -76,13 +104,6 @@ class MandrillDeliveryHandlerTest < Test::Unit::TestCase
 
     end
 
-  end
-
-
-  context '#message_payload' do
-    should "return a hash" do
-      assert subject.__send__(:message_payload, mock_mail_message).kind_of? Hash
-    end
   end
 
   private
@@ -120,5 +141,4 @@ class MandrillDeliveryHandlerTest < Test::Unit::TestCase
         { :params => ["test@email", "test2@email"], :expected => [{ :email => "test@email", :name => "test@email"}, { :email => "test2@email", :name => "test2@email"}] }
       ]
     end
-
 end
