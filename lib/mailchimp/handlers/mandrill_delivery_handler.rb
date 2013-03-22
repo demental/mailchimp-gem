@@ -7,8 +7,19 @@ module Mailchimp
     end
 
     def deliver!(message)
-      message_payload = {
-        :track_opens => settings[:track_opens],
+      api_key =
+      Mailchimp::Mandrill.new(api_key_for message).messages_send message_payload(message)
+    end
+
+    private
+
+    def api_key_for message
+      message.header['api-key'].blank? ? settings[:api_key] : message.header['api-key']
+    end
+
+    def message_payload message
+      {
+        :track_opens  => settings[:track_opens],
         :track_clicks => settings[:track_clicks],
         :message => {
           :subject => message.subject,
@@ -16,21 +27,13 @@ module Mailchimp
           :from_email => message.from.first,
           :to => get_to_for(message)
         }
-      }
-
-      [:html, :text].each do |format|
-        content = get_content_for(message, format)
-        message_payload[:message][format] = content unless content.blank?
+      }.tap do |payload|
+        [:html, :text].each do |format|
+          payload[:message][format] = get_content_for(message, format).to_s
+        end
+        payload[:tags] = settings[:tags] if settings[:tags]
       end
-
-      message_payload[:tags] = settings[:tags] if settings[:tags]
-
-      api_key = message.header['api-key'].blank? ? settings[:api_key] : message.header['api-key']
-
-      Mailchimp::Mandrill.new(api_key).messages_send(message_payload)
     end
-
-    private
 
     def get_to_for(message)
       to = message.to.kind_of?(Array) ? message.to : [message.to]
@@ -41,9 +44,9 @@ module Mailchimp
 
     def get_content_for(message, format)
       if(message.multipart?)
-        message.send(:"#{format.to_s}_part").body rescue nil
+        message.send(:"#{format.to_s}_part").body
       else
-        message.body unless is_format?(message, format)
+        message.body if is_format?(message, format)
       end
     end
 
