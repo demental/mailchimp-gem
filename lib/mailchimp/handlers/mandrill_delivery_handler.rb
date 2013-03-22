@@ -7,28 +7,11 @@ module Mailchimp
     end
 
     def deliver!(message)
-      puts get_to_for(message)
-      message_payload = {
-        :track_opens => settings[:track_opens],
-        :track_clicks => settings[:track_clicks],
-        :message => {
-          :subject => message.subject,
-          :from_name => settings[:from_name],
-          :from_email => message.from.first,
-          :to => get_to_for(message)
-        }
-      }
-
-      [:html, :text].each do |format|
-        content = get_content_for(message, format)
-        message_payload[:message][format] = content if content
-      end
-
-      message_payload[:tags] = settings[:tags] if settings[:tags]
 
       api_key = message.header['api-key'].blank? ? settings[:api_key] : message.header['api-key']
 
-      Mailchimp::Mandrill.new(api_key).messages_send(message_payload)
+      message_payload = get_message_payload(message)
+      self.settings[:return_response] = Mailchimp::Mandrill.new(api_key).messages_send(message_payload)
     end
 
     private
@@ -51,6 +34,27 @@ module Mailchimp
       content.body.to_s unless content.blank?
     end
 
+    def get_message_payload(message)
+      message_payload = {
+        :track_opens => settings[:track_opens],
+        :track_clicks => settings[:track_clicks],
+        :message => {
+          :subject => message.subject,
+          :from_name => message.header['from-name'].blank? ? settings[:from_name] : message.header['from-name'],
+          :from_email => message.from.first,
+          :to => message.to.map {|email| { :email => email, :name => email } },
+          :headers => {'Reply-To' => message.reply_to.nil? ? nil : message.reply_to }
+        }
+      }
+      message_payload[:message][:bcc_address] = message.bcc.first if message.bcc && !message.bcc.empty?
+      [:html, :text].each do |format|
+        content = get_content_for(message, format)
+        message_payload[:message][format] = content if content
+      end
+
+      message_payload[:tags] = settings[:tags] if settings[:tags]
+      message_payload
+    end
   end
 end
 
